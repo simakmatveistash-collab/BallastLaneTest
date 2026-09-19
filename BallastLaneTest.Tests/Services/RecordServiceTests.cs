@@ -12,11 +12,23 @@ namespace BallastLaneTest.Tests.Services;
 /// </summary>
 public class RecordServiceTests
 {
+    private const int UserId = 1;
+    private const int RecordId = 1;
+
+    private Mock<IRecordRepository> _mockRecordRepository = null!;
+    private RecordService _service = null!;
+
+    [SetUp]
+    public void Setup()
+    {
+        _mockRecordRepository = new Mock<IRecordRepository>();
+        _service = new RecordService(_mockRecordRepository.Object);
+    }
+
     [Test]
     public async Task CreateRecordAsync_Should_Create_New_Record()
     {
         // Arrange
-        var mockRecordRepository = new Mock<IRecordRepository>();
         var request = new CreateRecordRequest
         {
             Title = "Test Record",
@@ -25,47 +37,40 @@ public class RecordServiceTests
 
         var createdRecord = new Record
         {
-            Id = 1,
+            Id = RecordId,
             Title = request.Title,
             Content = request.Content,
-            UserId = 1
+            UserId = UserId
         };
 
-        mockRecordRepository.Setup(r => r.AddAsync(It.IsAny<Record>(), default))
+        _mockRecordRepository.Setup(r => r.AddAsync(It.IsAny<Record>(), default))
             .ReturnsAsync(createdRecord);
 
-        var service = new RecordService(mockRecordRepository.Object);
-
         // Act
-        var result = await service.CreateRecordAsync(1, request);
+        var result = await _service.CreateRecordAsync(UserId, request);
 
         // Assert
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Title, Is.EqualTo("Test Record"));
         Assert.That(result.Content, Is.EqualTo("Test Content"));
-        mockRecordRepository.Verify(r => r.AddAsync(It.IsAny<Record>(), default), Times.Once);
+        _mockRecordRepository.Verify(r => r.AddAsync(It.IsAny<Record>(), default), Times.Once);
     }
 
     [Test]
     public async Task GetUserRecordsAsync_Should_Return_User_Records()
     {
         // Arrange
-        var mockRecordRepository = new Mock<IRecordRepository>();
-        var userId = 1;
-
         var records = new List<Record>
         {
-            new Record { Id = 1, Title = "Record 1", Content = "Content 1", UserId = userId },
-            new Record { Id = 2, Title = "Record 2", Content = "Content 2", UserId = userId }
+            new Record { Id = 1, Title = "Record 1", Content = "Content 1", UserId = UserId },
+            new Record { Id = 2, Title = "Record 2", Content = "Content 2", UserId = UserId }
         };
 
-        mockRecordRepository.Setup(r => r.GetByUserIdAsync(userId, default))
+        _mockRecordRepository.Setup(r => r.GetByUserIdAsync(UserId, default))
             .ReturnsAsync(records);
 
-        var service = new RecordService(mockRecordRepository.Object);
-
         // Act
-        var result = await service.GetUserRecordsAsync(userId);
+        var result = await _service.GetUserRecordsAsync(UserId);
 
         // Assert
         Assert.That(result, Is.Not.Null);
@@ -77,22 +82,19 @@ public class RecordServiceTests
     public async Task GetRecordByIdAsync_Should_Return_Record()
     {
         // Arrange
-        var mockRecordRepository = new Mock<IRecordRepository>();
         var record = new Record
         {
-            Id = 1,
+            Id = RecordId,
             Title = "Test Record",
             Content = "Test Content",
-            UserId = 1
+            UserId = UserId
         };
 
-        mockRecordRepository.Setup(r => r.GetByIdAsync(1, default))
+        _mockRecordRepository.Setup(r => r.GetByIdAsync(RecordId, default))
             .ReturnsAsync(record);
 
-        var service = new RecordService(mockRecordRepository.Object);
-
         // Act
-        var result = await service.GetRecordByIdAsync(1);
+        var result = await _service.GetRecordByIdAsync(RecordId);
 
         // Assert
         Assert.That(result, Is.Not.Null);
@@ -103,9 +105,6 @@ public class RecordServiceTests
     public async Task UpdateRecordAsync_Should_Update_Record_When_Owner()
     {
         // Arrange
-        var mockRecordRepository = new Mock<IRecordRepository>();
-        var userId = 1;
-        var recordId = 1;
         var request = new UpdateRecordRequest
         {
             Title = "Updated Title",
@@ -114,90 +113,71 @@ public class RecordServiceTests
 
         var record = new Record
         {
-            Id = recordId,
+            Id = RecordId,
             Title = "Original Title",
             Content = "Original Content",
-            UserId = userId
+            UserId = UserId
         };
 
-        mockRecordRepository.Setup(r => r.ExistsByIdAndUserIdAsync(recordId, userId, default))
+        _mockRecordRepository.Setup(r => r.ExistsByIdAndUserIdAsync(RecordId, UserId, default))
             .ReturnsAsync(true);
-        mockRecordRepository.Setup(r => r.GetByIdAsync(recordId, default))
+        _mockRecordRepository.Setup(r => r.GetByIdAsync(RecordId, default))
             .ReturnsAsync(record);
-        mockRecordRepository.Setup(r => r.UpdateAsync(It.IsAny<Record>(), default))
+        _mockRecordRepository.Setup(r => r.UpdateAsync(It.IsAny<Record>(), default))
             .ReturnsAsync(record);
-
-        var service = new RecordService(mockRecordRepository.Object);
 
         // Act
-        var result = await service.UpdateRecordAsync(recordId, userId, request);
+        var result = await _service.UpdateRecordAsync(RecordId, UserId, request);
 
         // Assert
         Assert.That(result, Is.Not.Null);
-        mockRecordRepository.Verify(r => r.UpdateAsync(It.IsAny<Record>(), default), Times.Once);
+        _mockRecordRepository.Verify(r => r.UpdateAsync(It.IsAny<Record>(), default), Times.Once);
     }
 
     [Test]
-    public async Task UpdateRecordAsync_Should_Throw_When_Not_Owner()
+    public void UpdateRecordAsync_Should_Throw_When_Not_Owner()
     {
         // Arrange
-        var mockRecordRepository = new Mock<IRecordRepository>();
-        var userId = 1;
-        var recordId = 1;
         var request = new UpdateRecordRequest
         {
             Title = "Updated Title",
             Content = "Updated Content"
         };
 
-        mockRecordRepository.Setup(r => r.ExistsByIdAndUserIdAsync(recordId, userId, default))
+        _mockRecordRepository.Setup(r => r.ExistsByIdAndUserIdAsync(RecordId, UserId, default))
             .ReturnsAsync(false);
 
-        var service = new RecordService(mockRecordRepository.Object);
-
         // Act & Assert
-        Assert.ThrowsAsync<InvalidOperationException>(() => 
-            service.UpdateRecordAsync(recordId, userId, request));
+        Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _service.UpdateRecordAsync(RecordId, UserId, request));
     }
 
     [Test]
     public async Task DeleteRecordAsync_Should_Delete_Record_When_Owner()
     {
         // Arrange
-        var mockRecordRepository = new Mock<IRecordRepository>();
-        var userId = 1;
-        var recordId = 1;
-
-        mockRecordRepository.Setup(r => r.ExistsByIdAndUserIdAsync(recordId, userId, default))
+        _mockRecordRepository.Setup(r => r.ExistsByIdAndUserIdAsync(RecordId, UserId, default))
             .ReturnsAsync(true);
-        mockRecordRepository.Setup(r => r.DeleteAsync(recordId, default))
+        _mockRecordRepository.Setup(r => r.DeleteAsync(RecordId, default))
             .ReturnsAsync(true);
-
-        var service = new RecordService(mockRecordRepository.Object);
 
         // Act
-        var result = await service.DeleteRecordAsync(recordId, userId);
+        var result = await _service.DeleteRecordAsync(RecordId, UserId);
 
         // Assert
         Assert.That(result, Is.True);
-        mockRecordRepository.Verify(r => r.DeleteAsync(recordId, default), Times.Once);
+        _mockRecordRepository.Verify(r => r.DeleteAsync(RecordId, default), Times.Once);
     }
 
     [Test]
-    public async Task DeleteRecordAsync_Should_Throw_When_Not_Owner()
+    public void DeleteRecordAsync_Should_Throw_When_Not_Owner()
     {
         // Arrange
-        var mockRecordRepository = new Mock<IRecordRepository>();
-        var userId = 1;
-        var recordId = 1;
-
-        mockRecordRepository.Setup(r => r.ExistsByIdAndUserIdAsync(recordId, userId, default))
+        _mockRecordRepository.Setup(r => r.ExistsByIdAndUserIdAsync(RecordId, UserId, default))
             .ReturnsAsync(false);
 
-        var service = new RecordService(mockRecordRepository.Object);
-
         // Act & Assert
-        Assert.ThrowsAsync<InvalidOperationException>(() => 
-            service.DeleteRecordAsync(recordId, userId));
+        Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _service.DeleteRecordAsync(RecordId, UserId));
     }
 }

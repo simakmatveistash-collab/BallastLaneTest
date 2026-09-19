@@ -11,11 +11,15 @@ namespace BallastLaneTest.Tests.Repositories;
 public class RecordRepositoryTests
 {
     private DatabaseFixture _fixture = null!;
+    private RecordRepository _repository = null!;
+    private UserRepository _userRepository = null!;
 
     [SetUp]
     public void Setup()
     {
         _fixture = new DatabaseFixture();
+        _repository = new RecordRepository(_fixture.Context);
+        _userRepository = new UserRepository(_fixture.Context);
     }
 
     [TearDown]
@@ -26,14 +30,13 @@ public class RecordRepositoryTests
 
     private async Task<User> CreateTestUser()
     {
-        var userRepository = new UserRepository(_fixture.Context);
         var user = new User
         {
             Name = "Test User",
             Email = $"user{Guid.NewGuid()}@example.com",
             PasswordHash = "hashedpassword"
         };
-        return await userRepository.AddAsync(user);
+        return await _userRepository.AddAsync(user);
     }
 
     [Test]
@@ -41,7 +44,6 @@ public class RecordRepositoryTests
     {
         // Arrange
         var user = await CreateTestUser();
-        var repository = new RecordRepository(_fixture.Context);
         var record = new Record
         {
             Title = "Test Record",
@@ -50,7 +52,7 @@ public class RecordRepositoryTests
         };
 
         // Act
-        var result = await repository.AddAsync(record);
+        var result = await _repository.AddAsync(record);
 
         // Assert
         Assert.That(result, Is.Not.Null);
@@ -63,17 +65,16 @@ public class RecordRepositoryTests
     {
         // Arrange
         var user = await CreateTestUser();
-        var repository = new RecordRepository(_fixture.Context);
         var record = new Record
         {
             Title = "Existing Record",
             Content = "Existing Content",
             UserId = user.Id
         };
-        var createdRecord = await repository.AddAsync(record);
+        var createdRecord = await _repository.AddAsync(record);
 
         // Act
-        var result = await repository.GetByIdAsync(createdRecord.Id);
+        var result = await _repository.GetByIdAsync(createdRecord.Id);
 
         // Assert
         Assert.That(result, Is.Not.Null);
@@ -87,18 +88,17 @@ public class RecordRepositoryTests
         // Arrange
         var user1 = await CreateTestUser();
         var user2 = await CreateTestUser();
-        var repository = new RecordRepository(_fixture.Context);
 
         var record1 = new Record { Title = "Record 1", Content = "Content 1", UserId = user1.Id };
         var record2 = new Record { Title = "Record 2", Content = "Content 2", UserId = user1.Id };
         var record3 = new Record { Title = "Record 3", Content = "Content 3", UserId = user2.Id };
 
-        await repository.AddAsync(record1);
-        await repository.AddAsync(record2);
-        await repository.AddAsync(record3);
+        await _repository.AddAsync(record1);
+        await _repository.AddAsync(record2);
+        await _repository.AddAsync(record3);
 
         // Act
-        var result = await repository.GetByUserIdAsync(user1.Id);
+        var result = await _repository.GetByUserIdAsync(user1.Id);
 
         // Assert
         Assert.That(result, Is.Not.Null);
@@ -115,17 +115,16 @@ public class RecordRepositoryTests
     {
         // Arrange
         var user = await CreateTestUser();
-        var repository = new RecordRepository(_fixture.Context);
         var record = new Record
         {
             Title = "User Record",
             Content = "Content",
             UserId = user.Id
         };
-        var createdRecord = await repository.AddAsync(record);
+        var createdRecord = await _repository.AddAsync(record);
 
         // Act
-        var result = await repository.ExistsByIdAndUserIdAsync(createdRecord.Id, user.Id);
+        var result = await _repository.ExistsByIdAndUserIdAsync(createdRecord.Id, user.Id);
 
         // Assert
         Assert.That(result, Is.True);
@@ -137,17 +136,16 @@ public class RecordRepositoryTests
         // Arrange
         var user1 = await CreateTestUser();
         var user2 = await CreateTestUser();
-        var repository = new RecordRepository(_fixture.Context);
         var record = new Record
         {
             Title = "User1 Record",
             Content = "Content",
             UserId = user1.Id
         };
-        var createdRecord = await repository.AddAsync(record);
+        var createdRecord = await _repository.AddAsync(record);
 
         // Act
-        var result = await repository.ExistsByIdAndUserIdAsync(createdRecord.Id, user2.Id);
+        var result = await _repository.ExistsByIdAndUserIdAsync(createdRecord.Id, user2.Id);
 
         // Assert
         Assert.That(result, Is.False);
@@ -158,19 +156,18 @@ public class RecordRepositoryTests
     {
         // Arrange
         var user = await CreateTestUser();
-        var repository = new RecordRepository(_fixture.Context);
         var record = new Record
         {
             Title = "Original Title",
             Content = "Original Content",
             UserId = user.Id
         };
-        var createdRecord = await repository.AddAsync(record);
+        var createdRecord = await _repository.AddAsync(record);
         createdRecord.Title = "Updated Title";
         createdRecord.Content = "Updated Content";
 
         // Act
-        var result = await repository.UpdateAsync(createdRecord);
+        var result = await _repository.UpdateAsync(createdRecord);
 
         // Assert
         Assert.That(result.Title, Is.EqualTo("Updated Title"));
@@ -182,18 +179,17 @@ public class RecordRepositoryTests
     {
         // Arrange
         var user = await CreateTestUser();
-        var repository = new RecordRepository(_fixture.Context);
         var record = new Record
         {
             Title = "Delete Record",
             Content = "Content",
             UserId = user.Id
         };
-        var createdRecord = await repository.AddAsync(record);
+        var createdRecord = await _repository.AddAsync(record);
 
         // Act
-        var deleteResult = await repository.DeleteAsync(createdRecord.Id);
-        var getResult = await repository.GetByIdAsync(createdRecord.Id);
+        var deleteResult = await _repository.DeleteAsync(createdRecord.Id);
+        var getResult = await _repository.GetByIdAsync(createdRecord.Id);
 
         // Assert
         Assert.That(deleteResult, Is.True);

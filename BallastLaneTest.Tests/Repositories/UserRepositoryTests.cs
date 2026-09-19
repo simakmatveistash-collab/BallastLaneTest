@@ -11,11 +11,13 @@ namespace BallastLaneTest.Tests.Repositories;
 public class UserRepositoryTests
 {
     private DatabaseFixture _fixture = null!;
+    private UserRepository _repository = null!;
 
     [SetUp]
     public void Setup()
     {
         _fixture = new DatabaseFixture();
+        _repository = new UserRepository(_fixture.Context);
     }
 
     [TearDown]
@@ -28,7 +30,6 @@ public class UserRepositoryTests
     public async Task AddAsync_Should_Create_New_User()
     {
         // Arrange
-        var repository = new UserRepository(_fixture.Context);
         var user = new User
         {
             Name = "John Doe",
@@ -37,7 +38,7 @@ public class UserRepositoryTests
         };
 
         // Act
-        var result = await repository.AddAsync(user);
+        var result = await _repository.AddAsync(user);
 
         // Assert
         Assert.That(result, Is.Not.Null);
@@ -49,17 +50,16 @@ public class UserRepositoryTests
     public async Task GetByIdAsync_Should_Return_User_When_Exists()
     {
         // Arrange
-        var repository = new UserRepository(_fixture.Context);
         var user = new User
         {
             Name = "Jane Doe",
             Email = "jane@example.com",
             PasswordHash = "hashedpassword"
         };
-        var createdUser = await repository.AddAsync(user);
+        var createdUser = await _repository.AddAsync(user);
 
         // Act
-        var result = await repository.GetByIdAsync(createdUser.Id);
+        var result = await _repository.GetByIdAsync(createdUser.Id);
 
         // Assert
         Assert.That(result, Is.Not.Null);
@@ -70,11 +70,8 @@ public class UserRepositoryTests
     [Test]
     public async Task GetByIdAsync_Should_Return_Null_When_NotExists()
     {
-        // Arrange
-        var repository = new UserRepository(_fixture.Context);
-
         // Act
-        var result = await repository.GetByIdAsync(999);
+        var result = await _repository.GetByIdAsync(999);
 
         // Assert
         Assert.That(result, Is.Null);
@@ -84,7 +81,6 @@ public class UserRepositoryTests
     public async Task GetByEmailAsync_Should_Return_User_When_Exists()
     {
         // Arrange
-        var repository = new UserRepository(_fixture.Context);
         var testEmail = "test@example.com";
         var user = new User
         {
@@ -92,10 +88,10 @@ public class UserRepositoryTests
             Email = testEmail,
             PasswordHash = "hashedpassword"
         };
-        await repository.AddAsync(user);
+        await _repository.AddAsync(user);
 
         // Act
-        var result = await repository.GetByEmailAsync(testEmail);
+        var result = await _repository.GetByEmailAsync(testEmail);
 
         // Assert
         Assert.That(result, Is.Not.Null);
@@ -106,7 +102,6 @@ public class UserRepositoryTests
     public async Task ExistsByEmailAsync_Should_Return_True_When_User_Exists()
     {
         // Arrange
-        var repository = new UserRepository(_fixture.Context);
         var testEmail = "exists@example.com";
         var user = new User
         {
@@ -114,10 +109,10 @@ public class UserRepositoryTests
             Email = testEmail,
             PasswordHash = "hashedpassword"
         };
-        await repository.AddAsync(user);
+        await _repository.AddAsync(user);
 
         // Act
-        var result = await repository.ExistsByEmailAsync(testEmail);
+        var result = await _repository.ExistsByEmailAsync(testEmail);
 
         // Assert
         Assert.That(result, Is.True);
@@ -126,11 +121,8 @@ public class UserRepositoryTests
     [Test]
     public async Task ExistsByEmailAsync_Should_Return_False_When_User_Does_Not_Exist()
     {
-        // Arrange
-        var repository = new UserRepository(_fixture.Context);
-
         // Act
-        var result = await repository.ExistsByEmailAsync("nonexistent@example.com");
+        var result = await _repository.ExistsByEmailAsync("nonexistent@example.com");
 
         // Assert
         Assert.That(result, Is.False);
@@ -140,18 +132,17 @@ public class UserRepositoryTests
     public async Task DeleteAsync_Should_Remove_User()
     {
         // Arrange
-        var repository = new UserRepository(_fixture.Context);
         var user = new User
         {
             Name = "Delete User",
             Email = "delete@example.com",
             PasswordHash = "hashedpassword"
         };
-        var createdUser = await repository.AddAsync(user);
+        var createdUser = await _repository.AddAsync(user);
 
         // Act
-        var deleteResult = await repository.DeleteAsync(createdUser.Id);
-        var getResult = await repository.GetByIdAsync(createdUser.Id);
+        var deleteResult = await _repository.DeleteAsync(createdUser.Id);
+        var getResult = await _repository.GetByIdAsync(createdUser.Id);
 
         // Assert
         Assert.That(deleteResult, Is.True);

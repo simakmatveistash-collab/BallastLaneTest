@@ -13,13 +13,22 @@ namespace BallastLaneTest.Tests.Services;
 /// </summary>
 public class AuthServiceTests
 {
+    private Mock<IUserRepository> _mockUserRepository = null!;
+    private Mock<IPasswordHasher> _mockPasswordHasher = null!;
+    private AuthService _service = null!;
+
+    [SetUp]
+    public void Setup()
+    {
+        _mockUserRepository = new Mock<IUserRepository>();
+        _mockPasswordHasher = new Mock<IPasswordHasher>();
+        _service = new AuthService(_mockUserRepository.Object, _mockPasswordHasher.Object);
+    }
+
     [Test]
     public async Task RegisterUserAsync_Should_Create_New_User()
     {
         // Arrange
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockPasswordHasher = new Mock<IPasswordHasher>();
-
         var request = new RegisterUserRequest
         {
             Name = "John Doe",
@@ -27,11 +36,11 @@ public class AuthServiceTests
             Password = "password123"
         };
 
-        mockUserRepository.Setup(r => r.ExistsByEmailAsync(request.Email, default))
+        _mockUserRepository.Setup(r => r.ExistsByEmailAsync(request.Email, default))
             .ReturnsAsync(false);
 
         var hashedPassword = "hashed_password";
-        mockPasswordHasher.Setup(h => h.HashPassword(request.Password))
+        _mockPasswordHasher.Setup(h => h.HashPassword(request.Password))
             .Returns(hashedPassword);
 
         var createdUser = new User
@@ -42,28 +51,23 @@ public class AuthServiceTests
             PasswordHash = hashedPassword
         };
 
-        mockUserRepository.Setup(r => r.AddAsync(It.IsAny<User>(), default))
+        _mockUserRepository.Setup(r => r.AddAsync(It.IsAny<User>(), default))
             .ReturnsAsync(createdUser);
 
-        var service = new AuthService(mockUserRepository.Object, mockPasswordHasher.Object);
-
         // Act
-        var result = await service.RegisterUserAsync(request);
+        var result = await _service.RegisterUserAsync(request);
 
         // Assert
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Name, Is.EqualTo("John Doe"));
         Assert.That(result.Email, Is.EqualTo("john@example.com"));
-        mockUserRepository.Verify(r => r.AddAsync(It.IsAny<User>(), default), Times.Once);
+        _mockUserRepository.Verify(r => r.AddAsync(It.IsAny<User>(), default), Times.Once);
     }
 
     [Test]
-    public async Task RegisterUserAsync_Should_Throw_When_User_Exists()
+    public void RegisterUserAsync_Should_Throw_When_User_Exists()
     {
         // Arrange
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockPasswordHasher = new Mock<IPasswordHasher>();
-
         var request = new RegisterUserRequest
         {
             Name = "John Doe",
@@ -71,23 +75,18 @@ public class AuthServiceTests
             Password = "password123"
         };
 
-        mockUserRepository.Setup(r => r.ExistsByEmailAsync(request.Email, default))
+        _mockUserRepository.Setup(r => r.ExistsByEmailAsync(request.Email, default))
             .ReturnsAsync(true);
 
-        var service = new AuthService(mockUserRepository.Object, mockPasswordHasher.Object);
-
         // Act & Assert
-        Assert.ThrowsAsync<InvalidOperationException>(() => 
-            service.RegisterUserAsync(request));
+        Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _service.RegisterUserAsync(request));
     }
 
     [Test]
     public async Task LoginAsync_Should_Return_LoginResponse_When_Credentials_Valid()
     {
         // Arrange
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockPasswordHasher = new Mock<IPasswordHasher>();
-
         var request = new LoginRequest
         {
             Email = "john@example.com",
@@ -102,16 +101,14 @@ public class AuthServiceTests
             PasswordHash = "hashed_password"
         };
 
-        mockUserRepository.Setup(r => r.GetByEmailAsync(request.Email, default))
+        _mockUserRepository.Setup(r => r.GetByEmailAsync(request.Email, default))
             .ReturnsAsync(user);
 
-        mockPasswordHasher.Setup(h => h.VerifyPassword(request.Password, user.PasswordHash))
+        _mockPasswordHasher.Setup(h => h.VerifyPassword(request.Password, user.PasswordHash))
             .Returns(true);
 
-        var service = new AuthService(mockUserRepository.Object, mockPasswordHasher.Object);
-
         // Act
-        var result = await service.LoginAsync(request);
+        var result = await _service.LoginAsync(request);
 
         // Assert
         Assert.That(result, Is.Not.Null);
@@ -122,35 +119,27 @@ public class AuthServiceTests
     }
 
     [Test]
-    public async Task LoginAsync_Should_Throw_When_User_Not_Found()
+    public void LoginAsync_Should_Throw_When_User_Not_Found()
     {
         // Arrange
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockPasswordHasher = new Mock<IPasswordHasher>();
-
         var request = new LoginRequest
         {
             Email = "nonexistent@example.com",
             Password = "password123"
         };
 
-        mockUserRepository.Setup(r => r.GetByEmailAsync(request.Email, default))
+        _mockUserRepository.Setup(r => r.GetByEmailAsync(request.Email, default))
             .ReturnsAsync((User?)null);
 
-        var service = new AuthService(mockUserRepository.Object, mockPasswordHasher.Object);
-
         // Act & Assert
-        Assert.ThrowsAsync<InvalidOperationException>(() => 
-            service.LoginAsync(request));
+        Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _service.LoginAsync(request));
     }
 
     [Test]
-    public async Task LoginAsync_Should_Throw_When_Password_Invalid()
+    public void LoginAsync_Should_Throw_When_Password_Invalid()
     {
         // Arrange
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockPasswordHasher = new Mock<IPasswordHasher>();
-
         var request = new LoginRequest
         {
             Email = "john@example.com",
@@ -165,16 +154,14 @@ public class AuthServiceTests
             PasswordHash = "hashed_password"
         };
 
-        mockUserRepository.Setup(r => r.GetByEmailAsync(request.Email, default))
+        _mockUserRepository.Setup(r => r.GetByEmailAsync(request.Email, default))
             .ReturnsAsync(user);
 
-        mockPasswordHasher.Setup(h => h.VerifyPassword(request.Password, user.PasswordHash))
+        _mockPasswordHasher.Setup(h => h.VerifyPassword(request.Password, user.PasswordHash))
             .Returns(false);
 
-        var service = new AuthService(mockUserRepository.Object, mockPasswordHasher.Object);
-
         // Act & Assert
-        Assert.ThrowsAsync<InvalidOperationException>(() => 
-            service.LoginAsync(request));
+        Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _service.LoginAsync(request));
     }
 }
