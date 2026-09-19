@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	<TargetFramework>net10.0</TargetFramework>
+	<IsTestProject>true</IsTestProject>
+	<ImplicitUsings>enable</ImplicitUsings>
+	<Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+	<PackageReference Include="NUnit" Version="4.6.1" />
+	<PackageReference Include="NUnit3TestAdapter" Version="4.6.1" />
+	<PackageReference Include="Moq" Version="4.20.72" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<ProjectReference Include="../BallastLaneTest.Domain/BallastLaneTest.Domain.csproj" />
+	<ProjectReference Include="../BallastLaneTest.Application/BallastLaneTest.Application.csproj" />
+	<ProjectReference Include="../BallastLaneTest.Infrastructure/BallastLaneTest.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

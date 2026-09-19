@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
@@ -7,6 +8,12 @@ using Microsoft.Extensions.ServiceDiscovery;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using BallastLaneTest.Application.Services;
+using BallastLaneTest.Application.Services.Implementations;
+using BallastLaneTest.Domain.Repositories;
+using BallastLaneTest.Infrastructure.Data;
+using BallastLaneTest.Infrastructure.Repositories;
+using BallastLaneTest.Infrastructure.Security;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -123,5 +130,23 @@ public static class Extensions
         }
 
         return app;
+    }
+
+    public static TBuilder AddApplicationServices<TBuilder>(this TBuilder builder, string connectionString) where TBuilder : IHostApplicationBuilder
+    {
+        // Register DbContext
+        builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseSqlServer(connectionString));
+
+        // Register repositories
+        builder.Services.AddScoped<IUserRepository, UserRepository>();
+        builder.Services.AddScoped<IRecordRepository, RecordRepository>();
+
+        // Register services
+        builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+        builder.Services.AddScoped<IAuthService, AuthService>();
+        builder.Services.AddScoped<IRecordService, RecordService>();
+
+        return builder;
     }
 }

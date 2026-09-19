@@ -1,6 +1,10 @@
 <Solution>
   <Project Path="BallastLaneTest.AppHost/BallastLaneTest.AppHost.csproj" />
+  <Project Path="BallastLaneTest.Application/BallastLaneTest.Application.csproj" />
+  <Project Path="BallastLaneTest.Domain/BallastLaneTest.Domain.csproj" />
+  <Project Path="BallastLaneTest.Infrastructure/BallastLaneTest.Infrastructure.csproj" />
   <Project Path="BallastLaneTest.Server/BallastLaneTest.Server.csproj" />
+  <Project Path="BallastLaneTest.Tests/BallastLaneTest.Tests.csproj" />
   <Project Path="frontend/frontend.esproj">
     <Build />
     <Deploy />
