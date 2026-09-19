@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="BallastLaneTest.AppHost/BallastLaneTest.AppHost.csproj" />
+  <Project Path="BallastLaneTest.Server/BallastLaneTest.Server.csproj" />
+  <Project Path="frontend/frontend.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+</Solution>
