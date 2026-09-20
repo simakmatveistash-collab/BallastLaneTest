@@ -27,6 +27,18 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Apply database migrations
+app.ApplyMigrations();
+
+// Seed database with test data in development
+if (app.Environment.IsDevelopment())
+{
+    await app.SeedDatabaseAsync();
+}
+
+// Apply custom middleware
+app.UseCustomMiddleware();
+
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler();
 

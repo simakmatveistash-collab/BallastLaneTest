@@ -14,6 +14,8 @@ using BallastLaneTest.Domain.Repositories;
 using BallastLaneTest.Infrastructure.Data;
 using BallastLaneTest.Infrastructure.Repositories;
 using BallastLaneTest.Infrastructure.Security;
+using BallastLaneTest.Server.Middleware;
+using BallastLaneTest.Server.Startup;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -148,5 +150,37 @@ public static class Extensions
         builder.Services.AddScoped<IRecordService, RecordService>();
 
         return builder;
+    }
+
+    public static WebApplication ApplyMigrations(this WebApplication app)
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            dbContext.Database.Migrate();
+        }
+
+        return app;
+    }
+
+    public static async Task<WebApplication> SeedDatabaseAsync(this WebApplication app)
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            await BallastLaneTest.Server.Startup.DatabaseSeeder.SeedDataAsync(scope.ServiceProvider);
+        }
+
+        return app;
+    }
+
+    public static WebApplication UseCustomMiddleware(this WebApplication app)
+    {
+        // Add authentication middleware to extract userId from token
+        app.UseMiddleware<AuthenticationMiddleware>();
+
+        // Add exception handling middleware
+        app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+        return app;
     }
 }
