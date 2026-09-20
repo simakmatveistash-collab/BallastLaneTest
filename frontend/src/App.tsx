@@ -10,10 +10,51 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { RecordsPage } from './pages/RecordsPage';
+import { useMemo } from 'react';
 import './App.css';
 
 function AppContent() {
   const { isAuthenticated } = useAuth();
+
+  // Мемоизируем routes чтобы они не пересоздавались
+  const routes = useMemo(
+    () => (
+      <>
+        {/* Public Routes */}
+        <Route
+          path="/login"
+          element={isAuthenticated ? <Navigate to="/records" replace /> : <LoginPage />}
+        />
+        <Route
+          path="/register"
+          element={isAuthenticated ? <Navigate to="/records" replace /> : <RegisterPage />}
+        />
+
+        {/* Protected Routes */}
+        <Route
+          path="/records"
+          element={
+            <ProtectedRoute>
+              <RecordsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Default Route */}
+        <Route
+          path="/"
+          element={isAuthenticated ? <Navigate to="/records" replace /> : <Navigate to="/login" replace />}
+        />
+
+        {/* 404 Route */}
+        <Route
+          path="*"
+          element={<Navigate to={isAuthenticated ? '/records' : '/login'} replace />}
+        />
+      </>
+    ),
+    [isAuthenticated]
+  );
 
   return (
     <div className="app-container">
@@ -21,37 +62,7 @@ function AppContent() {
 
       <main className="main-content">
         <Routes>
-          {/* Public Routes */}
-          <Route
-            path="/login"
-            element={isAuthenticated ? <Navigate to="/records" replace /> : <LoginPage />}
-          />
-          <Route
-            path="/register"
-            element={isAuthenticated ? <Navigate to="/records" replace /> : <RegisterPage />}
-          />
-
-          {/* Protected Routes */}
-          <Route
-            path="/records"
-            element={
-              <ProtectedRoute>
-                <RecordsPage />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Default Route */}
-          <Route
-            path="/"
-            element={isAuthenticated ? <Navigate to="/records" replace /> : <Navigate to="/login" replace />}
-          />
-
-          {/* 404 Route */}
-          <Route
-            path="*"
-            element={<Navigate to={isAuthenticated ? '/records' : '/login'} replace />}
-          />
+          {routes}
         </Routes>
       </main>
     </div>

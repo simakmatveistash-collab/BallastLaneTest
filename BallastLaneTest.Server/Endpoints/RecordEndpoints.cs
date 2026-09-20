@@ -15,8 +15,7 @@ public static class RecordEndpoints
     {
         var recordGroup = app.MapGroup("/api/records")
             .WithTags("Records")
-            .WithOpenApi()
-            .RequireAuthorization("Bearer");
+            .WithOpenApi();
 
         recordGroup.MapGet("", GetRecords)
             .WithName("GetUserRecords")

@@ -34,7 +34,6 @@ export function RecordsPage() {
   };
 
   useEffect(() => {
-    console.log('RecordsPage mounted, loading records...');
     loadRecords();
   }, []);
 

@@ -53,9 +53,8 @@ app.UseCors("AllowFrontend");
 // Apply custom middleware (includes authentication)
 app.UseCustomMiddleware();
 
-// Add routing and authorization
+// Add routing
 app.UseRouting();
-app.UseAuthorization();
 
 // Map API endpoints
 app.MapAuthEndpoints();

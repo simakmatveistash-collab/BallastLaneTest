@@ -20,7 +20,11 @@ export function LoginPage() {
   // Redirect to records page after successful login
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/records', { replace: true });
+      // Small delay to ensure token is set in localStorage and apiClient
+      const timer = setTimeout(() => {
+        navigate('/records', { replace: true });
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [isAuthenticated, navigate]);
 
