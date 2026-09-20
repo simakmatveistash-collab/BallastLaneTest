@@ -31,9 +31,19 @@ export interface UserDto {
 class AuthService {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
-      const response = await apiClient.post<LoginResponse>('/api/auth/login', credentials);
-      apiClient.setAuthToken(response.token);
-      return response;
+      const response = await apiClient.post<any>('/api/auth/login', credentials);
+
+      // API returns {userId, name, email, token}, map to {user, token}
+      const mapped: LoginResponse = {
+        token: response.token,
+        user: {
+          id: response.userId,
+          name: response.name,
+          email: response.email,
+        },
+      };
+      apiClient.setAuthToken(mapped.token);
+      return mapped;
     } catch (error) {
       throw this.handleAuthError(error);
     }

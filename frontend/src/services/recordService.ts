@@ -26,7 +26,8 @@ export interface UpdateRecordRequest {
 
 class RecordService {
   async getAllRecords(): Promise<RecordDto[]> {
-    return apiClient.get<RecordDto[]>('/api/records');
+    const result = await apiClient.get<RecordDto[]>('/api/records');
+    return result;
   }
 
   async getRecordById(id: number): Promise<RecordDto> {

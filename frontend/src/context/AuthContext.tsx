@@ -3,7 +3,7 @@
  * Global state management for user authentication
  */
 
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { authService } from '../services/authService';
 import type { UserDto } from '../services/authService';
@@ -25,6 +25,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserDto | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Initialize user from localStorage on mount
+  useEffect(() => {
+    if (authService.isAuthenticated()) {
+      // Try to restore user from localStorage if token exists
+      const token = authService.getAuthToken();
+      if (token) {
+        // For now, we set a minimal user object; ideally fetch user info from API
+        setUser({ id: 0, name: 'User', email: '' } as UserDto);
+      }
+    }
+  }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);

@@ -3,19 +3,26 @@
  * User login form with email and password inputs
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Auth.css';
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login, isLoading, error, clearError } = useAuth();
+  const { login, isLoading, error, clearError, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [validationError, setValidationError] = useState('');
+
+  // Redirect to records page after successful login
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/records', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -49,7 +56,7 @@ export function LoginPage() {
     try {
       clearError();
       await login(formData.email, formData.password);
-      navigate('/records');
+      // Navigation to /records is handled by useEffect watching isAuthenticated
     } catch {
       // Error is handled by context
     }

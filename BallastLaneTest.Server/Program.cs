@@ -25,6 +25,9 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader());
 });
 
+// Add Authorization
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
 // Apply database migrations
@@ -36,9 +39,6 @@ if (app.Environment.IsDevelopment())
     await app.SeedDatabaseAsync();
 }
 
-// Apply custom middleware
-app.UseCustomMiddleware();
-
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler();
 
@@ -49,6 +49,13 @@ if (app.Environment.IsDevelopment())
 
 // Use CORS
 app.UseCors("AllowFrontend");
+
+// Apply custom middleware (includes authentication)
+app.UseCustomMiddleware();
+
+// Add routing and authorization
+app.UseRouting();
+app.UseAuthorization();
 
 // Map API endpoints
 app.MapAuthEndpoints();
